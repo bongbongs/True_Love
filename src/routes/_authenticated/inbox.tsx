@@ -30,15 +30,27 @@ function InboxPage() {
   const load = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("conversation_requests")
-      .select("id, sender_id, message, status, request_date, created_at, sender:profiles!conversation_requests_sender_id_fkey(display_name, avatar_url, bio)")
+      .select("id, sender_id, message, status, request_date, created_at")
       .eq("receiver_id", u.user.id)
       .order("created_at", { ascending: false })
       .limit(50);
-    setRequests((data as unknown as RequestRow[]) ?? []);
+    if (error) { toast.error(error.message); setLoading(false); return; }
+    const rows = data ?? [];
+    const senderIds = Array.from(new Set(rows.map((r) => r.sender_id)));
+    let profilesById: Record<string, { display_name: string; avatar_url: string | null; bio: string | null }> = {};
+    if (senderIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, bio")
+        .in("id", senderIds);
+      profilesById = Object.fromEntries((profs ?? []).map((p) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url, bio: p.bio }]));
+    }
+    setRequests(rows.map((r) => ({ ...r, sender: profilesById[r.sender_id] ?? null })) as RequestRow[]);
     setLoading(false);
   }, []);
+
 
   useEffect(() => {
     load();
