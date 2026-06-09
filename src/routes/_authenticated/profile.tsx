@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "프로필 · OneCall" }] }),
+  head: () => ({ meta: [{ title: "프로필 · True Love" }] }),
   component: ProfilePage,
 });
 

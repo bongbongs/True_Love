@@ -58,7 +58,7 @@ function AuthLayout() {
       {!isChat && (
         <header className="border-b sticky top-0 z-10 bg-background/80 backdrop-blur">
           <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link to="/" className="font-bold text-lg tracking-tight">OneCall</Link>
+            <Link to="/" className="font-bold text-lg tracking-tight">True Love</Link>
             <nav className="flex items-center gap-1">
               <Link to="/">
                 <Button variant={pathname === "/" ? "secondary" : "ghost"} size="sm">
