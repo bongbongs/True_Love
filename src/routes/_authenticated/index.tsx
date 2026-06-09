@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Sparkles, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
-  head: () => ({ meta: [{ title: "사람들 · OneCall" }] }),
+  head: () => ({ meta: [{ title: "사람들 · True Love" }] }),
   component: PeoplePage,
 });
 
@@ -99,7 +99,7 @@ function PeoplePage() {
             todaySent.status === "pending" ? "오늘의 신청을 보냈어요. 응답을 기다려요." :
             todaySent.status === "accepted" ? "오늘의 신청이 수락됐어요!" :
             "오늘의 신청이 거절됐어요. 내일 다시 시도해주세요."
-          ) : "하루에 단 한 명에게만 대화를 신청할 수 있어요"}
+          ) : "하루 단 한 번, 신중한 대화 신청으로 여러분의 진정한 사랑을 찾아보세요."}
         </p>
       </div>
 

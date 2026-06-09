@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "로그인 · OneCall" }] }),
+  head: () => ({ meta: [{ title: "로그인 · True Love" }] }),
   component: AuthPage,
 });
 
@@ -83,8 +83,8 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">OneCall</CardTitle>
-          <CardDescription>하루 단 한 번의 대화</CardDescription>
+          <CardTitle className="text-3xl font-bold tracking-tight">True Love</CardTitle>
+          <CardDescription>하루 단 한 번, 신중한 대화 신청으로 여러분의 진정한 사랑을 찾아보세요.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button variant="outline" className="w-full" onClick={handleGoogle}>

@@ -8,7 +8,7 @@ import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/chat/$roomId")({
-  head: () => ({ meta: [{ title: "대화 · OneCall" }] }),
+  head: () => ({ meta: [{ title: "대화 · True Love" }] }),
   component: ChatPage,
 });
 

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/inbox")({
-  head: () => ({ meta: [{ title: "받은 신청 · OneCall" }] }),
+  head: () => ({ meta: [{ title: "받은 신청 · True Love" }] }),
   component: InboxPage,
 });
 
