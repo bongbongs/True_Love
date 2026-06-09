@@ -26,6 +26,16 @@ function AuthLayout() {
     async function load() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
+      // 온보딩 체크: 미완료면 온보딩 페이지로 이동
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarded")
+        .eq("id", u.user.id)
+        .single();
+      if (active && profile && !profile.onboarded && pathname !== "/onboarding") {
+        navigate({ to: "/onboarding", replace: true });
+        return;
+      }
       const { count } = await supabase
         .from("conversation_requests")
         .select("*", { count: "exact", head: true })
@@ -42,7 +52,8 @@ function AuthLayout() {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [pathname, navigate]);
+
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
