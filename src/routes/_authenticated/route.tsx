@@ -69,7 +69,7 @@ function AuthLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {!isChat && (
+      {!hideNav && (
         <header className="border-b sticky top-0 z-10 bg-background/80 backdrop-blur">
           <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link to="/" className="font-bold text-lg tracking-tight">True Love</Link>
