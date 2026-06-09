@@ -41,15 +41,27 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("가입 완료! 로그인해주세요.");
-        setMode("signin");
+        toast.success("가입 완료! 바로 로그인해볼게요.");
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) {
+          setMode("signin");
+        } else {
+          navigate({ to: "/" });
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate({ to: "/" });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "오류가 발생했어요");
+      const raw = err instanceof Error ? err.message : "";
+      let msg = "오류가 발생했어요";
+      if (/Invalid login credentials/i.test(raw)) msg = "이메일 또는 비밀번호가 올바르지 않아요";
+      else if (/User already registered/i.test(raw)) msg = "이미 가입된 이메일이에요. 로그인해주세요.";
+      else if (/weak.?password|pwned/i.test(raw)) msg = "비밀번호가 너무 약해요. 더 복잡하게 만들어주세요.";
+      else if (/Password should be at least/i.test(raw)) msg = "비밀번호는 6자 이상이어야 해요";
+      else if (raw) msg = raw;
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
