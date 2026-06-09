@@ -1,46 +1,47 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { KOREA_CITIES, KOREA_REGIONS } from "@/lib/korea-regions";
 
-export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "프로필 · True Love" }] }),
-  component: ProfilePage,
+export const Route = createFileRoute("/_authenticated/onboarding")({
+  head: () => ({ meta: [{ title: "프로필 설정 · True Love" }] }),
+  component: OnboardingPage,
 });
 
-function ProfilePage() {
+function OnboardingPage() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
-  const [isPublic, setIsPublic] = useState(true);
 
   useEffect(() => {
-    async function load() {
+    (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data } = await supabase.from("profiles").select("*").eq("id", u.user.id).single();
       if (data) {
+        if (data.onboarded) {
+          navigate({ to: "/", replace: true });
+          return;
+        }
         setDisplayName(data.display_name ?? "");
         setBio(data.bio ?? "");
         setCity(data.region_city ?? "");
         setDistrict(data.region_district ?? "");
-        setIsPublic(data.is_public ?? true);
       }
       setLoading(false);
-    }
-    load();
-  }, []);
+    })();
+  }, [navigate]);
 
   async function save() {
     if (!displayName.trim()) return toast.error("닉네임을 입력해주세요");
@@ -55,14 +56,15 @@ function ProfilePage() {
       bio: bio.trim(),
       region_city: city,
       region_district: district,
-      is_public: isPublic,
+      onboarded: true,
     }).eq("id", u.user.id);
-    if (error) toast.error(error.message);
-    else toast.success("저장됐어요");
     setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("환영해요!");
+    navigate({ to: "/", replace: true });
   }
 
-  if (loading) return <div className="max-w-3xl mx-auto p-6 text-center text-muted-foreground">불러오는 중...</div>;
+  if (loading) return <div className="max-w-xl mx-auto p-6 text-center text-muted-foreground">불러오는 중...</div>;
 
   const districts = city ? KOREA_REGIONS[city] ?? [] : [];
 
@@ -70,16 +72,17 @@ function ProfilePage() {
     <div className="max-w-xl mx-auto p-4 sm:p-6">
       <Card>
         <CardHeader>
-          <CardTitle>내 프로필</CardTitle>
+          <CardTitle>프로필을 완성해주세요</CardTitle>
+          <CardDescription>다른 분들이 볼 정보예요. 시작 전에 한 번만 채워주시면 돼요.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-1.5">
             <Label htmlFor="name">닉네임</Label>
-            <Input id="name" value={displayName} maxLength={20} onChange={(e) => setDisplayName(e.target.value)} />
+            <Input id="name" value={displayName} maxLength={20} onChange={(e) => setDisplayName(e.target.value)} placeholder="어떻게 불릴까요?" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="bio">한 줄 소개 <span className="text-xs text-muted-foreground">({bio.length}/30)</span></Label>
-            <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={30} rows={2} />
+            <Textarea id="bio" value={bio} maxLength={30} rows={2} onChange={(e) => setBio(e.target.value)} placeholder="당신을 한 문장으로 표현한다면?" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -101,14 +104,7 @@ function ProfilePage() {
               </Select>
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <Label htmlFor="public" className="text-sm font-medium">공개 목록에 표시</Label>
-              <p className="text-xs text-muted-foreground mt-0.5">다른 사용자가 나를 찾고 신청할 수 있어요</p>
-            </div>
-            <Switch id="public" checked={isPublic} onCheckedChange={setIsPublic} />
-          </div>
-          <Button onClick={save} disabled={saving} className="w-full">{saving ? "저장 중..." : "저장"}</Button>
+          <Button onClick={save} disabled={saving} className="w-full">{saving ? "저장 중..." : "시작하기"}</Button>
         </CardContent>
       </Card>
     </div>
