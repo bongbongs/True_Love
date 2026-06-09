@@ -125,6 +125,9 @@ export type Database = {
           display_name: string
           id: string
           is_public: boolean
+          onboarded: boolean
+          region_city: string | null
+          region_district: string | null
           updated_at: string
         }
         Insert: {
@@ -134,6 +137,9 @@ export type Database = {
           display_name: string
           id: string
           is_public?: boolean
+          onboarded?: boolean
+          region_city?: string | null
+          region_district?: string | null
           updated_at?: string
         }
         Update: {
@@ -143,6 +149,9 @@ export type Database = {
           display_name?: string
           id?: string
           is_public?: boolean
+          onboarded?: boolean
+          region_city?: string | null
+          region_district?: string | null
           updated_at?: string
         }
         Relationships: []

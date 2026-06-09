@@ -26,6 +26,16 @@ function AuthLayout() {
     async function load() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
+      // 온보딩 체크: 미완료면 온보딩 페이지로 이동
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarded")
+        .eq("id", u.user.id)
+        .single();
+      if (active && profile && !profile.onboarded && pathname !== "/onboarding") {
+        navigate({ to: "/onboarding", replace: true });
+        return;
+      }
       const { count } = await supabase
         .from("conversation_requests")
         .select("*", { count: "exact", head: true })
@@ -42,7 +52,8 @@ function AuthLayout() {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [pathname, navigate]);
+
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -52,10 +63,13 @@ function AuthLayout() {
   }
 
   const isChat = pathname.startsWith("/chat/");
+  const isOnboarding = pathname === "/onboarding";
+  const hideNav = isChat || isOnboarding;
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {!isChat && (
+      {!hideNav && (
         <header className="border-b sticky top-0 z-10 bg-background/80 backdrop-blur">
           <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link to="/" className="font-bold text-lg tracking-tight">True Love</Link>
