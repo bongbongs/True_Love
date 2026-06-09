@@ -63,6 +63,9 @@ function AuthLayout() {
   }
 
   const isChat = pathname.startsWith("/chat/");
+  const isOnboarding = pathname === "/onboarding";
+  const hideNav = isChat || isOnboarding;
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
