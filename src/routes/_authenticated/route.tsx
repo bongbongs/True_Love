@@ -44,13 +44,10 @@ function AuthLayout() {
       if (active) setPendingCount(count ?? 0);
     }
     load();
-    const channel = supabase
-      .channel("nav-requests")
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversation_requests" }, load)
-      .subscribe();
+    const refreshTimer = window.setInterval(load, 15_000);
     return () => {
       active = false;
-      supabase.removeChannel(channel);
+      window.clearInterval(refreshTimer);
     };
   }, [pathname, navigate]);
 
