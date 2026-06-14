@@ -60,17 +60,22 @@ function ChatPage() {
     return () => { active = false; };
   }, [roomId, navigate]);
 
-  // Realtime
+  // Refresh messages without exposing Realtime channels.
   useEffect(() => {
-    const ch = supabase
-      .channel(`room-${roomId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `room_id=eq.${roomId}` },
-        (payload) => {
-          setMessages((prev) => prev.some(m => m.id === (payload.new as Message).id) ? prev : [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    let active = true;
+    const refresh = async () => {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: true });
+      if (active && data) setMessages(data);
+    };
+    const refreshTimer = window.setInterval(refresh, 3_000);
+    return () => {
+      active = false;
+      window.clearInterval(refreshTimer);
+    };
   }, [roomId]);
 
   // Countdown

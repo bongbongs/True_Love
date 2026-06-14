@@ -54,11 +54,8 @@ function InboxPage() {
 
   useEffect(() => {
     load();
-    const ch = supabase
-      .channel("inbox-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversation_requests" }, load)
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const refreshTimer = window.setInterval(load, 10_000);
+    return () => { window.clearInterval(refreshTimer); };
   }, [load]);
 
   async function accept(id: string) {
