@@ -5,7 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/inbox")({
   head: () => ({ meta: [{ title: "받은 신청 · True Love" }] }),
@@ -26,6 +37,8 @@ function InboxPage() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<RequestRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -72,6 +85,21 @@ function InboxPage() {
     load();
   }
 
+  async function deleteConversation() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.rpc("delete_received_conversation", { _request_id: deleteTarget.id });
+    if (error) {
+      toast.error("대화를 삭제하지 못했어요. 다시 시도해주세요.");
+      setDeleting(false);
+      return;
+    }
+    setRequests((current) => current.filter((request) => request.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    setDeleting(false);
+    toast.success("대화가 삭제되었어요");
+  }
+
   if (loading) return <div className="max-w-3xl mx-auto p-6 text-center text-muted-foreground">불러오는 중...</div>;
 
   return (
@@ -102,11 +130,43 @@ function InboxPage() {
                     <Button size="sm" variant="outline" onClick={() => decline(r.id)}>거절</Button>
                   </div>
                 )}
+                {r.status === "accepted" && (
+                  <div className="mt-3">
+                    <Button size="sm" variant="outline" onClick={() => setDeleteTarget(r)}>
+                      <Trash2 className="mr-1.5 h-4 w-4" />
+                      대화 삭제
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
       ))}
+
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>대화를 정말 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.sender?.display_name ?? "상대방"}님과 나눈 모든 메시지가 영구적으로 삭제되며 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>취소</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(event) => {
+                event.preventDefault();
+                void deleteConversation();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
