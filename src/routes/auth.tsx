@@ -41,11 +41,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("가입 완료! 바로 로그인해볼게요.");
+        toast.success("🎉 회원가입이 완료되었어요! True Love에 오신 것을 환영합니다.");
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
         if (signInErr) {
+          toast.info("이메일 인증 후 로그인해주세요.");
           setMode("signin");
         } else {
+          toast.success("로그인 되었습니다! 프로필을 설정해주세요.");
           navigate({ to: "/" });
         }
       } else {
