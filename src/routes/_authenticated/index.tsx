@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Sparkles, MessageCircle } from "lucide-react";
+import { Sparkles, MessageCircle, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "사람들 · True Love" }] }),
@@ -19,7 +20,12 @@ type Profile = {
   display_name: string;
   bio: string | null;
   avatar_url: string | null;
+  region_city: string | null;
+  region_district: string | null;
 };
+
+const REGION_STORAGE_KEY = "truelove:lastRegion";
+const ALL_REGIONS = "__all__";
 
 function todayKST(): string {
   const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -36,6 +42,10 @@ function PeoplePage() {
   const [target, setTarget] = useState<Profile | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [region, setRegion] = useState<string>(() => {
+    if (typeof window === "undefined") return ALL_REGIONS;
+    return window.localStorage.getItem(REGION_STORAGE_KEY) ?? ALL_REGIONS;
+  });
 
   useEffect(() => {
     async function load() {
@@ -44,12 +54,12 @@ function PeoplePage() {
       setMe(u.user.id);
 
       const [{ data: profiles }, { data: requests }, { data: rooms }] = await Promise.all([
-        supabase.from("profiles").select("id, display_name, bio, avatar_url").eq("is_public", true).neq("id", u.user.id),
+        supabase.from("profiles").select("id, display_name, bio, avatar_url, region_city, region_district").eq("is_public", true).neq("id", u.user.id),
         supabase.from("conversation_requests").select("id, receiver_id, status").eq("sender_id", u.user.id).eq("request_date", todayKST()).maybeSingle(),
         supabase.from("chat_rooms").select("id, user1_id, user2_id, expires_at").gt("expires_at", new Date().toISOString()),
       ]);
 
-      setPeople(profiles ?? []);
+      setPeople((profiles ?? []) as Profile[]);
       setTodaySent(requests ?? null);
       const map: Record<string, string> = {};
       (rooms ?? []).forEach((r: { id: string; user1_id: string; user2_id: string }) => {
@@ -61,6 +71,22 @@ function PeoplePage() {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(REGION_STORAGE_KEY, region);
+  }, [region]);
+
+  const regions = useMemo(() => {
+    const set = new Set<string>();
+    people.forEach((p) => { if (p.region_city) set.add(p.region_city); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ko"));
+  }, [people]);
+
+  const filteredPeople = useMemo(() => {
+    if (region === ALL_REGIONS) return people;
+    return people.filter((p) => p.region_city === region);
+  }, [people, region]);
 
   async function sendRequest() {
     if (!target) return;
@@ -103,11 +129,29 @@ function PeoplePage() {
         </p>
       </div>
 
-      {people.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">아직 다른 사용자가 없어요</CardContent></Card>
+      <div className="flex items-center gap-2">
+        <MapPin className="h-4 w-4 text-muted-foreground" />
+        <Select value={region} onValueChange={setRegion}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="지역 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_REGIONS}>전체 지역</SelectItem>
+            {regions.map((r) => (
+              <SelectItem key={r} value={r}>{r}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground ml-auto">{filteredPeople.length}명</span>
+      </div>
+
+      {filteredPeople.length === 0 ? (
+        <Card><CardContent className="py-12 text-center text-muted-foreground">
+          {region === ALL_REGIONS ? "아직 다른 사용자가 없어요" : "이 지역에는 아직 사용자가 없어요"}
+        </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {people.map((p) => {
+          {filteredPeople.map((p) => {
             const room = activeRooms[p.id];
             const alreadySent = todaySent?.receiver_id === p.id;
             return (
@@ -119,7 +163,9 @@ function PeoplePage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{p.display_name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{p.bio || "한 줄 소개가 없어요"}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {p.region_city ? `${p.region_city}${p.region_district ? " · " + p.region_district : ""}` : (p.bio || "한 줄 소개가 없어요")}
+                    </div>
                   </div>
                   {room ? (
                     <Button size="sm" onClick={() => navigate({ to: "/chat/$roomId", params: { roomId: room } })}>

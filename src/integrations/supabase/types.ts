@@ -163,6 +163,7 @@ export type Database = {
     Functions: {
       accept_request: { Args: { _request_id: string }; Returns: string }
       decline_request: { Args: { _request_id: string }; Returns: undefined }
+      delete_chat_room: { Args: { _room_id: string }; Returns: undefined }
       delete_received_conversation: {
         Args: { _request_id: string }
         Returns: undefined
