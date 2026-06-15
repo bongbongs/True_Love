@@ -129,11 +129,29 @@ function PeoplePage() {
         </p>
       </div>
 
-      {people.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">아직 다른 사용자가 없어요</CardContent></Card>
+      <div className="flex items-center gap-2">
+        <MapPin className="h-4 w-4 text-muted-foreground" />
+        <Select value={region} onValueChange={setRegion}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="지역 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_REGIONS}>전체 지역</SelectItem>
+            {regions.map((r) => (
+              <SelectItem key={r} value={r}>{r}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground ml-auto">{filteredPeople.length}명</span>
+      </div>
+
+      {filteredPeople.length === 0 ? (
+        <Card><CardContent className="py-12 text-center text-muted-foreground">
+          {region === ALL_REGIONS ? "아직 다른 사용자가 없어요" : "이 지역에는 아직 사용자가 없어요"}
+        </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {people.map((p) => {
+          {filteredPeople.map((p) => {
             const room = activeRooms[p.id];
             const alreadySent = todaySent?.receiver_id === p.id;
             return (
@@ -145,7 +163,9 @@ function PeoplePage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{p.display_name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{p.bio || "한 줄 소개가 없어요"}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {p.region_city ? `${p.region_city}${p.region_district ? " · " + p.region_district : ""}` : (p.bio || "한 줄 소개가 없어요")}
+                    </div>
                   </div>
                   {room ? (
                     <Button size="sm" onClick={() => navigate({ to: "/chat/$roomId", params: { roomId: room } })}>
