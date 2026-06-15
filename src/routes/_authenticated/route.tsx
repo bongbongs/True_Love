@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } 
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, Inbox, User, LogOut } from "lucide-react";
+import { Home, Inbox, User, LogOut, History } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -84,6 +84,11 @@ function AuthLayout() {
                       {pendingCount}
                     </span>
                   )}
+                </Button>
+              </Link>
+              <Link to="/history">
+                <Button variant={pathname === "/history" ? "secondary" : "ghost"} size="sm">
+                  <History className="h-4 w-4 mr-1.5" />기록
                 </Button>
               </Link>
               <Link to="/profile">
