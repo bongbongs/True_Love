@@ -42,6 +42,10 @@ function PeoplePage() {
   const [target, setTarget] = useState<Profile | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [region, setRegion] = useState<string>(() => {
+    if (typeof window === "undefined") return ALL_REGIONS;
+    return window.localStorage.getItem(REGION_STORAGE_KEY) ?? ALL_REGIONS;
+  });
 
   useEffect(() => {
     async function load() {
@@ -50,12 +54,12 @@ function PeoplePage() {
       setMe(u.user.id);
 
       const [{ data: profiles }, { data: requests }, { data: rooms }] = await Promise.all([
-        supabase.from("profiles").select("id, display_name, bio, avatar_url").eq("is_public", true).neq("id", u.user.id),
+        supabase.from("profiles").select("id, display_name, bio, avatar_url, region_city, region_district").eq("is_public", true).neq("id", u.user.id),
         supabase.from("conversation_requests").select("id, receiver_id, status").eq("sender_id", u.user.id).eq("request_date", todayKST()).maybeSingle(),
         supabase.from("chat_rooms").select("id, user1_id, user2_id, expires_at").gt("expires_at", new Date().toISOString()),
       ]);
 
-      setPeople(profiles ?? []);
+      setPeople((profiles ?? []) as Profile[]);
       setTodaySent(requests ?? null);
       const map: Record<string, string> = {};
       (rooms ?? []).forEach((r: { id: string; user1_id: string; user2_id: string }) => {
@@ -67,6 +71,22 @@ function PeoplePage() {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(REGION_STORAGE_KEY, region);
+  }, [region]);
+
+  const regions = useMemo(() => {
+    const set = new Set<string>();
+    people.forEach((p) => { if (p.region_city) set.add(p.region_city); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ko"));
+  }, [people]);
+
+  const filteredPeople = useMemo(() => {
+    if (region === ALL_REGIONS) return people;
+    return people.filter((p) => p.region_city === region);
+  }, [people, region]);
 
   async function sendRequest() {
     if (!target) return;
