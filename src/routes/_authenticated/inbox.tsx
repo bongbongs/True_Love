@@ -132,10 +132,10 @@ function InboxPage() {
                 )}
                 {r.status === "accepted" && (
                   <div className="mt-3">
-                    <Button size="sm" variant="outline" onClick={() => setDeleteTarget(r)}>
-                      <Trash2 className="mr-1.5 h-4 w-4" />
-                      대화 삭제
-                    </Button>
+                  <Button size="sm" variant="outline" onClick={() => setDeleteTarget(r)}>
+                    <Trash2 className="mr-1.5 h-4 w-4" />
+                    삭제
+                  </Button>
                   </div>
                 )}
               </div>
