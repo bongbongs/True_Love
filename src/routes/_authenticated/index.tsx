@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Sparkles, MessageCircle } from "lucide-react";
+import { Sparkles, MessageCircle, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "사람들 · True Love" }] }),
@@ -19,7 +20,12 @@ type Profile = {
   display_name: string;
   bio: string | null;
   avatar_url: string | null;
+  region_city: string | null;
+  region_district: string | null;
 };
+
+const REGION_STORAGE_KEY = "truelove:lastRegion";
+const ALL_REGIONS = "__all__";
 
 function todayKST(): string {
   const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
